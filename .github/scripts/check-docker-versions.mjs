@@ -122,6 +122,10 @@ async function latestStableVersion(image, currentMajor, tagPattern) {
   );
   return {
     version: parts.slice(0, precision).join("."),
+    // The full upstream version the pinned digest was resolved from (for
+    // example `9.1.3` for the `9` line). Consumers compare it to decide
+    // whether an update stays within the same minor.
+    resolvedVersion: best,
     digest: compatible.digest,
     platformDigests,
     newerMajor:
@@ -206,6 +210,7 @@ async function checkRuntimeArrayService(key, cfg) {
     const extra = {};
     if (result.version !== tuple.version) extra.version = result.version;
     if (result.digest !== tuple.digest) extra.digest = result.digest;
+    if (result.resolvedVersion !== tuple.resolvedVersion) extra.resolvedVersion = result.resolvedVersion;
     if (
       Object.keys(result.platformDigests).length === 2 &&
       JSON.stringify(result.platformDigests) !== JSON.stringify(tuple.platformDigests)
@@ -285,6 +290,9 @@ for (const [key, cfg] of Object.entries(versions.images)) {
       newVersion = result?.version ?? null;
       if (result?.digest && result.digest !== cfg.digest) {
         extraChanges.digest = result.digest;
+      }
+      if (result?.resolvedVersion && result.resolvedVersion !== cfg.resolvedVersion) {
+        extraChanges.resolvedVersion = result.resolvedVersion;
       }
       if (
         result &&
