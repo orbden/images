@@ -128,11 +128,11 @@ docker compose -p wcp -f stack/docker-compose.v2.yml -f stack/docker-compose.v2.
 Images are automatically built and pushed to GitHub Container Registry on every push to `main`:
 
 ```bash
-docker pull ghcr.io/local-control-panel/frankenphp:1-php8.3
-docker pull ghcr.io/local-control-panel/mariadb:11.4
-docker pull ghcr.io/local-control-panel/mariadb:13.0
-docker pull ghcr.io/local-control-panel/valkey:9
-docker pull ghcr.io/local-control-panel/meilisearch:1.53.3
+docker pull ghcr.io/orbden/frankenphp:1-php8.3
+docker pull ghcr.io/orbden/mariadb:11.4
+docker pull ghcr.io/orbden/mariadb:13.0
+docker pull ghcr.io/orbden/valkey:9
+docker pull ghcr.io/orbden/meilisearch:1.53.3
 ```
 
 ## Version management

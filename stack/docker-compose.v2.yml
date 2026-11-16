@@ -19,7 +19,7 @@ services:
     # explicitly uses the catalog's PHP 8.3 carrier image (PHP is inert in
     # this role). The tag remains for readability, while the OCI index digest
     # makes the actual multi-arch image immutable.
-    image: ${WCP_INGRESS_IMAGE:-ghcr.io/local-control-panel/frankenphp:1-php8.3@sha256:e303f441a1db85ae94b325c7b49ec9a0115309f88cb978ac38ea733b4d5b3bfd}
+    image: ${WCP_INGRESS_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:e303f441a1db85ae94b325c7b49ec9a0115309f88cb978ac38ea733b4d5b3bfd}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -71,7 +71,7 @@ services:
     # without the id silently lying about what's actually running (RP-03).
     # Mirrors runtime-fp1-php84/85 below, which already hardcode their own
     # PHP component the same way.
-    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/local-control-panel/frankenphp:1-php8.3@sha256:e303f441a1db85ae94b325c7b49ec9a0115309f88cb978ac38ea733b4d5b3bfd}
+    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:e303f441a1db85ae94b325c7b49ec9a0115309f88cb978ac38ea733b4d5b3bfd}
     restart: unless-stopped
     volumes:
       - ../frankenphp/Caddyfile.runtime:/etc/caddy/Caddyfile:ro
@@ -115,7 +115,7 @@ services:
   # (8.3). Ingress reverse-proxies to these by domain. Started on demand via
   # --profile php-8.X - not running by default (mirrors docker-compose.yml).
   runtime-fp1-php82:
-    image: ${WCP_FRANKENPHP_82_IMAGE:-ghcr.io/local-control-panel/frankenphp:1-php8.2@sha256:5afac77b58e7e7be6128f6ef50e4591af7cb6905b6bc304ee0f52e826fbc6613}
+    image: ${WCP_FRANKENPHP_82_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.2@sha256:5afac77b58e7e7be6128f6ef50e4591af7cb6905b6bc304ee0f52e826fbc6613}
     restart: unless-stopped
     profiles: ["php-8.2"]
     volumes:
@@ -152,7 +152,7 @@ services:
       start_period: 15s
 
   runtime-fp1-php84:
-    image: ${WCP_FRANKENPHP_84_IMAGE:-ghcr.io/local-control-panel/frankenphp:1-php8.4@sha256:51d82ab9c20add10fc17f53ccc60e21d187adb5651ac5a0bd0ef1fbb4cad7e10}
+    image: ${WCP_FRANKENPHP_84_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.4@sha256:51d82ab9c20add10fc17f53ccc60e21d187adb5651ac5a0bd0ef1fbb4cad7e10}
     restart: unless-stopped
     profiles: ["php-8.4"]
     volumes:
@@ -189,7 +189,7 @@ services:
       start_period: 15s
 
   runtime-fp1-php85:
-    image: ${WCP_FRANKENPHP_85_IMAGE:-ghcr.io/local-control-panel/frankenphp:1-php8.5@sha256:bdfff9fae6436f1e2bb3fb614537be7c11da774a632c867feaae20d77da1ce75}
+    image: ${WCP_FRANKENPHP_85_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.5@sha256:bdfff9fae6436f1e2bb3fb614537be7c11da774a632c867feaae20d77da1ce75}
     restart: unless-stopped
     profiles: ["php-8.5"]
     volumes:
@@ -224,7 +224,7 @@ services:
 
   # ── Database ──────────────────────────────────────────────────────────────
   mariadb-11:
-    image: ${WCP_MARIADB_IMAGE:-ghcr.io/local-control-panel/mariadb:11.4@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620}
+    image: ${WCP_MARIADB_IMAGE:-ghcr.io/orbden/mariadb:11.4@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620}
     restart: unless-stopped
     command: --innodb-buffer-pool-size=${MARIADB_INNODB_BUFFER_POOL_SIZE:-1024M}
     environment:
@@ -271,7 +271,7 @@ services:
   # demand (--profile db-13) or as the server's primary line when chosen at
   # install. It never shares or migrates the mariadb-11 volume.
   mariadb-13:
-    image: ${WCP_MARIADB_13_IMAGE:-ghcr.io/local-control-panel/mariadb:13.0@sha256:f4054da26e3a9dd6c8b5cc97363e544408b15c0fb369d7359c25dc04826eb6e1}
+    image: ${WCP_MARIADB_13_IMAGE:-ghcr.io/orbden/mariadb:13.0@sha256:f4054da26e3a9dd6c8b5cc97363e544408b15c0fb369d7359c25dc04826eb6e1}
     restart: unless-stopped
     profiles: ["db-13"]
     command: --innodb-buffer-pool-size=${MARIADB_INNODB_BUFFER_POOL_SIZE:-1024M}
@@ -317,7 +317,7 @@ services:
 
   # ── Object cache ──────────────────────────────────────────────────────────
   valkey-9:
-    image: ${WCP_VALKEY_IMAGE:-ghcr.io/local-control-panel/valkey:9@sha256:bf09d58e96d6b4524a15396b65b242bbe18beebbcc15a04d8ee75ddac62fae0b}
+    image: ${WCP_VALKEY_IMAGE:-ghcr.io/orbden/valkey:9@sha256:bf09d58e96d6b4524a15396b65b242bbe18beebbcc15a04d8ee75ddac62fae0b}
     restart: unless-stopped
     # The start script writes the ACL file from VALKEY_ADMIN_PASSWORD, then
     # hands over to the image's entrypoint (which drops root).
@@ -357,7 +357,7 @@ services:
 
   # ── Relational DB (optional) ──────────────────────────────────────────────
   postgres-18:
-    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/local-control-panel/postgres:18@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5}
+    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/orbden/postgres:18@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5}
     restart: unless-stopped
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
@@ -411,7 +411,7 @@ services:
   # After /health and data checks, remove meili-restore and start meili-1
   # normally. Never clear the volume until the exported snapshot is non-empty.
   meili-1:
-    image: ${WCP_MEILISEARCH_IMAGE:-ghcr.io/local-control-panel/meilisearch:1.53.3@sha256:cf9bb47e8ecf080f0b3ca33f58a2f9d1e382d5479d360541df05e1c49841e4a9}
+    image: ${WCP_MEILISEARCH_IMAGE:-ghcr.io/orbden/meilisearch:1.53.3@sha256:cf9bb47e8ecf080f0b3ca33f58a2f9d1e382d5479d360541df05e1c49841e4a9}
     restart: unless-stopped
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:?required}
