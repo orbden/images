@@ -3,7 +3,7 @@ services:
     # Our GHCR image contains the PHP extensions, entrypoint helpers and Caddy
     # platform configuration defined in this repository. WP-CLI is not part of
     # it: it is installed on the host by the Operations Engine and mounted below.
-    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/local-control-panel/frankenphp:${FRANKENPHP_VERSION:-1}-php${PHP_VERSION:-8.3}}
+    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/orbden/frankenphp:${FRANKENPHP_VERSION:-1}-php${PHP_VERSION:-8.3}}
     container_name: frankenphp
     restart: unless-stopped
     env_file:

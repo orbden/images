@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: ghcr.io/local-control-panel/mariadb:${MARIADB_VERSION:-11.4}
+    image: ghcr.io/orbden/mariadb:${MARIADB_VERSION:-11.4}
     container_name: mariadb
     restart: unless-stopped
     env_file:
