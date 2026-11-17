@@ -3,12 +3,20 @@ name: Build & Push Images
 on:
   push:
     branches: [main]
+    # Only files that go into a built image (the frankenphp build context's
+    # COPY sources) plus versions.json. Compose files, READMEs, Dockerfile.dev,
+    # the stack/ files and the bind-mounted configs of the re-tagged images do
+    # not change an image, so they must not rebuild or move any tag. Per-image
+    # filtering inside versions.json is done by the "Detect changed images" step.
     paths:
-      - "frankenphp/**"
-      - "mariadb/**"
-      - "valkey/**"
-      - "postgres/**"
-      - "meilisearch/**"
+      - "frankenphp/Dockerfile"
+      - "frankenphp/.dockerignore"
+      - "frankenphp/Caddyfile"
+      - "frankenphp/php.ini"
+      - "frankenphp/caddy-global/**"
+      - "frankenphp/docker-entrypoint.d/**"
+      - "frankenphp/docker-entrypoint.sh"
+      - "frankenphp/wcp-wp"
       - "versions.json"
   workflow_dispatch:
 
@@ -32,6 +40,7 @@ jobs:
       postgres: ${{ steps.v.outputs.postgres }}
       postgres_digest: ${{ steps.v.outputs.postgres_digest }}
       meilisearch: ${{ steps.v.outputs.meilisearch }}
+      meilisearch_digest: ${{ steps.v.outputs.meilisearch_digest }}
       frankenphp_changed: ${{ steps.changes.outputs.frankenphp }}
       mariadb_changed: ${{ steps.changes.outputs.mariadb }}
       valkey_changed: ${{ steps.changes.outputs.valkey }}
@@ -73,10 +82,13 @@ jobs:
           echo "postgres=$(jq -r '.images.postgres.version' versions.json)" >> $GITHUB_OUTPUT
           echo "postgres_digest=$(jq -r '.images.postgres.digest' versions.json)" >> $GITHUB_OUTPUT
           echo "meilisearch=$(jq -r '.images.meilisearch.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "meilisearch_digest=$(jq -r '.images.meilisearch.digest' versions.json)" >> $GITHUB_OUTPUT
 
-      # Per-image change detection: an image is "changed" if its build
-      # context directory touched, or its versions.json entry differs from
-      # the previous commit. workflow_dispatch ignores these outputs
+      # Per-image change detection: an image is "changed" if a file that goes
+      # into it changed (frankenphp's COPY sources; the other images are
+      # upstream re-tags with no files baked in), or its versions.json entry
+      # differs from the previous commit (frankenphp: ignoring the recorded
+      # digests, which are outputs of a build, not inputs). workflow_dispatch ignores these outputs
       # entirely (see per-job `if:` below) and always builds everything.
       - name: Detect changed images
         id: changes
@@ -93,13 +105,29 @@ jobs:
             BASE=""
           fi
 
+          # Files that go into each image. Only frankenphp builds from a
+          # context; mariadb/valkey/postgres/meilisearch re-tag an upstream
+          # image and their directories only hold compose files and
+          # bind-mounted configs, so they have no build inputs here.
+          inputs() {
+            case "$1" in
+              frankenphp)
+                echo frankenphp/Dockerfile frankenphp/.dockerignore \
+                  frankenphp/Caddyfile frankenphp/php.ini frankenphp/caddy-global \
+                  frankenphp/docker-entrypoint.d frankenphp/docker-entrypoint.sh \
+                  frankenphp/wcp-wp
+                ;;
+            esac
+          }
+
           changed() {
             key="$1"
             if [ -z "$BASE" ]; then
               echo true
               return
             fi
-            if ! git diff --quiet "$BASE" HEAD -- "$key/"; then
+            files=$(inputs "$key")
+            if [ -n "$files" ] && ! git diff --quiet "$BASE" HEAD -- $files; then
               echo true
               return
             fi
@@ -390,7 +418,7 @@ jobs:
           docker buildx imagetools create \
             --tag ghcr.io/${{ github.repository_owner }}/meilisearch:${{ needs.versions.outputs.meilisearch }} \
             --tag ghcr.io/${{ github.repository_owner }}/meilisearch:latest \
-            getmeili/meilisearch:v${{ needs.versions.outputs.meilisearch }}
+            getmeili/meilisearch:v${{ needs.versions.outputs.meilisearch }}@${{ needs.versions.outputs.meilisearch_digest }}
 
       - uses: aquasecurity/trivy-action@v0.36.0
         with:
