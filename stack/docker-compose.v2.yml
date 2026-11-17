@@ -19,7 +19,7 @@ services:
     # explicitly uses the catalog's PHP 8.3 carrier image (PHP is inert in
     # this role). The tag remains for readability, while the OCI index digest
     # makes the actual multi-arch image immutable.
-    image: ${WCP_INGRESS_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:b6e521f4632202aec14c97253418ef4b19b1284ec7f9363dc97a24661a2a85d1}
+    image: ${WCP_INGRESS_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:dbef6c8d8721143336d2cf1bc80594423ad73f0c6925ecffaec0e8d4f05ace00}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -71,7 +71,7 @@ services:
     # without the id silently lying about what's actually running (RP-03).
     # Mirrors runtime-fp1-php84/85 below, which already hardcode their own
     # PHP component the same way.
-    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:b6e521f4632202aec14c97253418ef4b19b1284ec7f9363dc97a24661a2a85d1}
+    image: ${WCP_FRANKENPHP_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.3@sha256:dbef6c8d8721143336d2cf1bc80594423ad73f0c6925ecffaec0e8d4f05ace00}
     restart: unless-stopped
     volumes:
       - ../frankenphp/Caddyfile.runtime:/etc/caddy/Caddyfile:ro
@@ -115,7 +115,7 @@ services:
   # (8.3). Ingress reverse-proxies to these by domain. Started on demand via
   # --profile php-8.X - not running by default (mirrors docker-compose.yml).
   runtime-fp1-php82:
-    image: ${WCP_FRANKENPHP_82_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.2@sha256:11a4f8c4db161031734ad102c4793f31d7a7698465d6987e6a3d6787d0d07f05}
+    image: ${WCP_FRANKENPHP_82_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.2@sha256:3930aaa5248fe69d3ec1b7eb0b6e54f1f75109623d6b12b93e1c1e920843b189}
     restart: unless-stopped
     profiles: ["php-8.2"]
     volumes:
@@ -152,7 +152,7 @@ services:
       start_period: 15s
 
   runtime-fp1-php84:
-    image: ${WCP_FRANKENPHP_84_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.4@sha256:a0f40c6f8daf5f703ec63e2554b59114fbfecf78e1f6b857598cf6f38816427c}
+    image: ${WCP_FRANKENPHP_84_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.4@sha256:0e775ed967730e9eda78ca0eff09d2960d336015b7c3630a76a196a6caa96055}
     restart: unless-stopped
     profiles: ["php-8.4"]
     volumes:
@@ -189,7 +189,7 @@ services:
       start_period: 15s
 
   runtime-fp1-php85:
-    image: ${WCP_FRANKENPHP_85_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.5@sha256:6b06bbd25d4c1fbc9c0cc9c64ed33cf8717996a58e965de780953dc75181e857}
+    image: ${WCP_FRANKENPHP_85_IMAGE:-ghcr.io/orbden/frankenphp:1-php8.5@sha256:80aad414c5f001bb0ada9d61513a26272b45044bcedbbb4bda8ee1f5d8818102}
     restart: unless-stopped
     profiles: ["php-8.5"]
     volumes:
