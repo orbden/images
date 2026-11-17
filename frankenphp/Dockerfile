@@ -68,6 +68,14 @@ RUN apt-get update \
 #                 6.2.0 fails to build on PHP 8.5 — php_smart_string.h was removed)
 #   sockets    → low-level socket API (required by some queue / async plugins)
 #   zip        → ZIP read/write (plugin & theme installs, backup plugins)
+#   bz2        → bzip2 archives (Nextcloud apps, backup tools)
+#   calendar   → calendar conversion functions (some Joomla/Drupal modules)
+#   ftp        → FTP client (Nextcloud external storage, legacy updaters)
+#   gettext    → gettext translations (phpBB, MediaWiki, many Laravel apps)
+#   gmp        → big-integer math (Nextcloud, TYPO3 hashing helpers, crypto libs)
+#   ldap       → LDAP/AD login (Moodle, Nextcloud, Drupal, Joomla)
+#   soap       → SOAP client/server (Magento, PrestaShop, Moodle, payment gateways)
+#   xsl        → XSLT (Magento, TYPO3 extensions, Moodle)
 #
 # NOTE: opcache is already compiled into the FrankenPHP base image.
 # NOTE: relay (high-perf Redis client) is omitted — commercial license
@@ -77,18 +85,26 @@ RUN apt-get update \
 RUN install-php-extensions \
     apcu \
     bcmath \
+    bz2 \
+    calendar \
     excimer \
     exif \
+    ftp \
     gd \
+    gettext \
+    gmp \
     igbinary \
     imagick \
     intl \
+    ldap \
     mysqli \
     pcntl \
     pdo_mysql \
     pdo_pgsql \
     redis-6.3.0 \
+    soap \
     sockets \
+    xsl \
     zip \
     # linux-libc-dev is pulled in as a build dependency (e.g. for compiling
     # redis-6.3.0 from source) and never used at runtime. It's just kernel
