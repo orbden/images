@@ -115,10 +115,10 @@
       "image": "postgres",
       "publishedImage": "ghcr.io/orbden/postgres",
       "version": "18",
-      "digest": "sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5",
+      "digest": "sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015",
       "platformDigests": {
-        "linux/amd64": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503",
-        "linux/arm64": "sha256:b1c1673a890fba8fae71d37210b4fd9a0b5cd0df8bb994a6bcc01d9cf8e1670c"
+        "linux/amd64": "sha256:fa1b61f5a4844f4d4b73c9b15716cfc75fe70c931f2d32723630f3b900056366",
+        "linux/arm64": "sha256:aea692538b8982646f587a0dc0263986ac063c043ab28a43076a07d099a0ef53"
       },
       "tagPattern": "{version}-alpine",
       "platforms": [
@@ -126,7 +126,8 @@
         "linux/arm64"
       ],
       "registryUrl": "https://hub.docker.com/v2/repositories/library/postgres/tags",
-      "notes": "Re-tagged upstream PostgreSQL 18 Alpine image; postgresql.conf tuning is bind-mounted. PGDATA is /var/lib/postgresql/18/docker, with a dedicated postgres_18_data volume mounted at /var/lib/postgresql. Supports amd64 and arm64."
+      "notes": "Re-tagged upstream PostgreSQL 18 Alpine image; postgresql.conf tuning is bind-mounted. PGDATA is /var/lib/postgresql/18/docker, with a dedicated postgres_18_data volume mounted at /var/lib/postgresql. Supports amd64 and arm64.",
+      "resolvedVersion": "18.7"
     },
     "valkey": {
       "image": "valkey/valkey",

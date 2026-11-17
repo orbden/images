@@ -357,7 +357,7 @@ services:
 
   # ── Relational DB (optional) ──────────────────────────────────────────────
   postgres-18:
-    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/orbden/postgres:18@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5}
+    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/orbden/postgres:18@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015}
     restart: unless-stopped
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
