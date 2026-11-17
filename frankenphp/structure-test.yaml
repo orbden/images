@@ -98,6 +98,54 @@ commandTests:
     args: ["-version"]
     exitCode: 0
 
+  - name: "bz2 extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('bz2') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "calendar extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('calendar') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "ftp extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('ftp') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "gettext extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('gettext') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "gmp extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('gmp') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "ldap extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('ldap') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "soap extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('soap') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
+  - name: "xsl extension loaded"
+    command: "php"
+    args: ["-r", "echo extension_loaded('xsl') ? 'ok' : 'missing';"]
+    expectedOutput: ["ok"]
+    exitCode: 0
+
 fileExistenceTests:
   - name: "Caddyfile present"
     path: "/etc/caddy/Caddyfile"
