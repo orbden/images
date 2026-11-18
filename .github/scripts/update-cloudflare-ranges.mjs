@@ -10,6 +10,7 @@ import { isIP } from "node:net";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { appendOutputs, fetchOk } from "./lib.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(scriptDir, "..", "..");
@@ -29,8 +30,7 @@ function isValidCidr(value, version) {
 }
 
 async function fetchRanges(url, version) {
-  const response = await fetch(url, { headers: { Accept: "text/plain" } });
-  if (!response.ok) throw new Error(url + " returned HTTP " + response.status);
+  const response = await fetchOk(url, { headers: { Accept: "text/plain" } });
 
   const ranges = (await response.text())
     .split(/\r?\n/)
@@ -75,6 +75,4 @@ if (changed && !dryRun) {
 console.log("Cloudflare ranges: " + ipv4.length + " IPv4, " + ipv6.length + " IPv6");
 console.log(changed ? (dryRun ? "[dry-run] ranges would be updated" : "ranges updated") : "ranges are already current");
 
-if (process.env.GITHUB_OUTPUT) {
-  writeFileSync(process.env.GITHUB_OUTPUT, "changed=" + changed + "\n", { flag: "a" });
-}
+appendOutputs(process.env.GITHUB_OUTPUT, { changed });
