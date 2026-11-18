@@ -12,6 +12,7 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { appendOutputs, fetchOk, readJson, writeJson } from "./lib.mjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "..", "..");
@@ -34,10 +35,11 @@ async function fetchTags(image, pageSize = 100) {
     ? image.split("/")
     : ["library", image];
   const url = `https://hub.docker.com/v2/repositories/${namespace}/${name}/tags?page_size=${pageSize}&ordering=last_updated`;
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`Docker Hub ${url} → ${res.status}`);
+  const res = await fetchOk(
+    url,
+    { headers: { Accept: "application/json" } },
+    (target, response) => `Docker Hub ${target} → ${response.status}`,
+  );
   const data = await res.json();
   return data.results ?? [];
 }
@@ -175,7 +177,7 @@ async function latestFrankenPhpVersion(currentVersion) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const versions = JSON.parse(readFileSync(VERSIONS_PATH, "utf8"));
+const versions = readJson(VERSIONS_PATH);
 const originalVersions = structuredClone(versions);
 const tableRows = [];
 const majorRows = [];
@@ -349,7 +351,7 @@ const today = new Date().toISOString().slice(0, 10);
 versions._updated = today;
 
 if (changed && !DRY_RUN) {
-  writeFileSync(VERSIONS_PATH, JSON.stringify(versions, null, 2) + "\n", "utf8");
+  writeJson(VERSIONS_PATH, versions);
   for (const path of COMPOSE_PATHS) {
     if (!existsSync(path)) continue;
     let content = readFileSync(path, "utf8");
@@ -394,14 +396,13 @@ if (changed && !DRY_RUN) {
   console.log("\n✓ All versions are up to date.");
 }
 
-const outputFile = process.env.GITHUB_OUTPUT;
-if (outputFile) {
-  const { appendFileSync } = await import("fs");
-  appendFileSync(outputFile, `changed=${changed}\n`);
-  appendFileSync(outputFile, `date=${today}\n`);
-  appendFileSync(outputFile, `table=${tableRows.join("\\n")}\n`);
-  appendFileSync(outputFile, `major_candidates=${majorRows.join("\\n")}\n`);
-} else {
+const wroteOutputs = appendOutputs(process.env.GITHUB_OUTPUT, {
+  changed,
+  date: today,
+  table: tableRows.join("\\n"),
+  major_candidates: majorRows.join("\\n"),
+});
+if (!wroteOutputs) {
   console.log(`\nchanged=${changed}`);
   console.log(`date=${today}`);
   if (tableRows.length) console.log("\nTable rows:\n" + tableRows.join("\n"));
