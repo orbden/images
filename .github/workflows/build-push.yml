@@ -225,6 +225,9 @@ jobs:
         php: ${{ fromJson(needs.versions.outputs.frankenphp_php_versions) }}
     runs-on: ubuntu-latest
     steps:
+      # The local composite actions below live in this repository.
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v4
         with:
           path: /tmp/digests
@@ -239,41 +242,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compute tags
-        id: tags
-        run: |
-          TAGS="ghcr.io/${{ github.repository_owner }}/frankenphp:${{ needs.versions.outputs.frankenphp }}-php${{ matrix.php }},ghcr.io/${{ github.repository_owner }}/frankenphp:${{ needs.versions.outputs.frankenphp_base }}-php${{ matrix.php }}"
-          if [ "${{ matrix.php }}" = "${{ needs.versions.outputs.frankenphp_php_default }}" ]; then
-            TAGS="$TAGS,ghcr.io/${{ github.repository_owner }}/frankenphp:latest"
-          fi
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/frankenphp
+          flavor: latest=false
+          tags: |
+            type=raw,value=${{ needs.versions.outputs.frankenphp }}-php${{ matrix.php }}
+            type=raw,value=${{ needs.versions.outputs.frankenphp_base }}-php${{ matrix.php }}
+            type=raw,value=latest,enable=${{ matrix.php == needs.versions.outputs.frankenphp_php_default }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create \
-            $(echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/--tag /' | tr '\n' ' ') \
+            $(jq -cr '.tags | map("--tag " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf 'ghcr.io/${{ github.repository_owner }}/frankenphp@sha256:%s ' *)
 
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: ./.github/actions/scan-image
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/frankenphp:${{ needs.versions.outputs.frankenphp }}-php${{ matrix.php }}
-          format: sarif
-          output: trivy-frankenphp.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-frankenphp.sarif
-          category: trivy-frankenphp-php${{ matrix.php }}
+          name: frankenphp-php${{ matrix.php }}
 
   # One job per coexisting MariaDB major line (images/versions.json's
   # images.mariadb.runtimes) rather than a single version - each line keeps
   # its own tag/digest so promoting a new major never retags or replaces an
   # existing one (see the note on images.mariadb in versions.json and
   # image_catalog.rs's DbRuntimeTuple).
+  #
+  # The re-tag jobs below use no custom Dockerfile: config is delivered via
+  # bind mount at runtime (see <image>/docker-compose.yml), so the upstream
+  # multi-arch image is re-tagged under our fixed ghcr.io tag instead of
+  # rebuilt (meilisearch only needs its healthcheck, which lives in compose).
   mariadb:
     needs: versions
     if: github.event_name == 'workflow_dispatch' || needs.versions.outputs.mariadb_changed == 'true'
@@ -283,153 +283,77 @@ jobs:
         runtime: ${{ fromJson(needs.versions.outputs.mariadb_runtimes) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/login-action@v4
+      - uses: ./.github/actions/retag-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          image: mariadb
+          tags: |
+            type=raw,value=${{ matrix.runtime.version }}
+            type=raw,value=latest,enable=${{ matrix.runtime.id == needs.versions.outputs.mariadb_default }}
+          source: mariadb:${{ matrix.runtime.version }}@${{ matrix.runtime.digest }}
 
-      - name: Compute tags
-        id: tags
-        run: |
-          TAGS="ghcr.io/${{ github.repository_owner }}/mariadb:${{ matrix.runtime.version }}"
-          if [ "${{ matrix.runtime.id }}" = "${{ needs.versions.outputs.mariadb_default }}" ]; then
-            TAGS="$TAGS,ghcr.io/${{ github.repository_owner }}/mariadb:latest"
-          fi
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-
-      # No custom Dockerfile — config is delivered via bind mount at runtime
-      # (see mariadb/docker-compose.yml), so we just re-tag the upstream
-      # multi-arch image under our fixed ghcr.io tag instead of rebuilding it.
-      - name: Re-tag upstream image
-        run: |
-          docker buildx imagetools create \
-            $(echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/--tag /' | tr '\n' ' ') \
-            mariadb:${{ matrix.runtime.version }}@${{ matrix.runtime.digest }}
-
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: ./.github/actions/scan-image
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/mariadb:${{ matrix.runtime.version }}
-          format: sarif
-          output: trivy-mariadb-${{ matrix.runtime.id }}.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-mariadb-${{ matrix.runtime.id }}.sarif
-          category: trivy-mariadb-${{ matrix.runtime.id }}
+          name: mariadb-${{ matrix.runtime.id }}
 
   valkey:
     needs: versions
     if: github.event_name == 'workflow_dispatch' || needs.versions.outputs.valkey_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/login-action@v4
+      - uses: ./.github/actions/retag-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          image: valkey
+          tags: |
+            type=raw,value=${{ needs.versions.outputs.valkey }}
+            type=raw,value=latest
+          source: valkey/valkey:${{ needs.versions.outputs.valkey }}-alpine@${{ needs.versions.outputs.valkey_digest }}
 
-      # No custom Dockerfile — config is delivered via bind mount at runtime
-      # (see valkey/docker-compose.yml), so we just re-tag the upstream
-      # multi-arch image under our fixed ghcr.io tag instead of rebuilding it.
-      - name: Re-tag upstream image
-        run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/${{ github.repository_owner }}/valkey:${{ needs.versions.outputs.valkey }} \
-            --tag ghcr.io/${{ github.repository_owner }}/valkey:latest \
-            valkey/valkey:${{ needs.versions.outputs.valkey }}-alpine@${{ needs.versions.outputs.valkey_digest }}
-
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: ./.github/actions/scan-image
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/valkey:${{ needs.versions.outputs.valkey }}
-          format: sarif
-          output: trivy-valkey.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-valkey.sarif
-          category: trivy-valkey
+          name: valkey
 
   postgres:
     needs: versions
     if: github.event_name == 'workflow_dispatch' || needs.versions.outputs.postgres_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/login-action@v4
+      - uses: ./.github/actions/retag-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          image: postgres
+          tags: |
+            type=raw,value=${{ needs.versions.outputs.postgres }}
+            type=raw,value=latest
+          source: postgres:${{ needs.versions.outputs.postgres }}-alpine@${{ needs.versions.outputs.postgres_digest }}
 
-      # No custom Dockerfile — config is delivered via bind mount at runtime
-      # (see postgres/docker-compose.yml), so we just re-tag the upstream
-      # multi-arch image under our fixed ghcr.io tag instead of rebuilding it.
-      - name: Re-tag upstream image
-        run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/${{ github.repository_owner }}/postgres:${{ needs.versions.outputs.postgres }} \
-            --tag ghcr.io/${{ github.repository_owner }}/postgres:latest \
-            postgres:${{ needs.versions.outputs.postgres }}-alpine@${{ needs.versions.outputs.postgres_digest }}
-
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: ./.github/actions/scan-image
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/postgres:${{ needs.versions.outputs.postgres }}
-          format: sarif
-          output: trivy-postgres.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-postgres.sarif
-          category: trivy-postgres
+          name: postgres
 
   meilisearch:
     needs: versions
     if: github.event_name == 'workflow_dispatch' || needs.versions.outputs.meilisearch_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/login-action@v4
+      - uses: ./.github/actions/retag-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          image: meilisearch
+          tags: |
+            type=raw,value=${{ needs.versions.outputs.meilisearch }}
+            type=raw,value=latest
+          source: getmeili/meilisearch:v${{ needs.versions.outputs.meilisearch }}@${{ needs.versions.outputs.meilisearch_digest }}
 
-      # No custom Dockerfile — nothing to bake in beyond the healthcheck,
-      # which lives in compose. Just re-tag the upstream multi-arch image
-      # under our fixed ghcr.io tag instead of rebuilding it.
-      - name: Re-tag upstream image
-        run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/${{ github.repository_owner }}/meilisearch:${{ needs.versions.outputs.meilisearch }} \
-            --tag ghcr.io/${{ github.repository_owner }}/meilisearch:latest \
-            getmeili/meilisearch:v${{ needs.versions.outputs.meilisearch }}@${{ needs.versions.outputs.meilisearch_digest }}
-
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: ./.github/actions/scan-image
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/meilisearch:${{ needs.versions.outputs.meilisearch }}
-          format: sarif
-          output: trivy-meilisearch.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: trivy-meilisearch.sarif
-          category: trivy-meilisearch
+          name: meilisearch
