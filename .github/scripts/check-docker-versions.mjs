@@ -12,7 +12,7 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { appendOutputs, fetchOk, readJson, writeJson } from "./lib.mjs";
+import { appendOutputs, fetchOk, pinnedReferences, readJson, writeJson } from "./lib.mjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "..", "..");
@@ -364,11 +364,12 @@ if (changed && !DRY_RUN) {
         for (const nextTuple of next.runtimes) {
           const prevTuple = previous.runtimes.find((t) => t.id === nextTuple.id);
           if (!prevTuple) continue;
+          const from = pinnedReferences(previous, prevTuple);
+          const to = pinnedReferences(next, nextTuple);
+          from.forEach((reference, i) => {
+            content = content.replaceAll(reference, to[i]);
+          });
           content = content
-            .replaceAll(
-              `${previous.publishedImage}:${prevTuple.version}@${prevTuple.digest}`,
-              `${next.publishedImage}:${nextTuple.version}@${nextTuple.digest}`,
-            )
             .replaceAll(
               `${key.toUpperCase()}_VERSION:-${prevTuple.version}`,
               `${key.toUpperCase()}_VERSION:-${nextTuple.version}`,
@@ -377,11 +378,12 @@ if (changed && !DRY_RUN) {
         continue;
       }
 
+      const from = pinnedReferences(previous, previous);
+      const to = pinnedReferences(next, next);
+      from.forEach((reference, i) => {
+        content = content.replaceAll(reference, to[i]);
+      });
       content = content
-        .replaceAll(
-          `${previous.publishedImage}:${previous.version}@${previous.digest}`,
-          `${next.publishedImage}:${next.version}@${next.digest}`,
-        )
         .replaceAll(
           `${key.toUpperCase()}_VERSION:-${previous.version}`,
           `${key.toUpperCase()}_VERSION:-${next.version}`,

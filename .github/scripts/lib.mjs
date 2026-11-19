@@ -35,3 +35,18 @@ export function appendOutputs(outputFile, outputs) {
   appendFileSync(outputFile, Object.entries(outputs).map(([name, value]) => name + "=" + value + "\n").join(""));
   return true;
 }
+
+/**
+ * Every image reference a Compose file pins for one catalog entry (`cfg` is
+ * the image entry, `tuple` the entry itself or one of its runtimes): the
+ * published one (`ghcr.io/...:<version>@<digest>`) and the upstream one the
+ * local overlay uses (`<image>:<tagPattern>@<digest>`). They are replaced
+ * pairwise when a digest moves.
+ */
+export function pinnedReferences(cfg, tuple) {
+  const tag = (cfg.tagPattern ?? "{version}").replace("{version}", tuple.version);
+  return [
+    `${cfg.publishedImage}:${tuple.version}@${tuple.digest}`,
+    `${cfg.image}:${tag}@${tuple.digest}`,
+  ];
+}
