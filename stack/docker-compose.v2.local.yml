@@ -64,16 +64,16 @@ services:
       - ${WCP_CADDY_LOG}:/var/log/caddy
 
   mariadb-11:
-    image: ${WCP_MARIADB_IMAGE:-mariadb:11.4@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620}
+    image: ${WCP_MARIADB_IMAGE:-mariadb:11.4@sha256:5e73baf8179b29f115101bb102763a47a017361f3e9792daccba6646c3ab1532}
 
   mariadb-13:
-    image: ${WCP_MARIADB_13_IMAGE:-mariadb:13.0@sha256:f4054da26e3a9dd6c8b5cc97363e544408b15c0fb369d7359c25dc04826eb6e1}
+    image: ${WCP_MARIADB_13_IMAGE:-mariadb:13.0@sha256:54f493ea0d60b621a5bff84e5b20100f8b86b6efa6b79158e04756c5194a5e4d}
 
   valkey-9:
-    image: ${WCP_VALKEY_IMAGE:-valkey/valkey:9-alpine@sha256:bf09d58e96d6b4524a15396b65b242bbe18beebbcc15a04d8ee75ddac62fae0b}
+    image: ${WCP_VALKEY_IMAGE:-valkey/valkey:9-alpine@sha256:c8e2d17498838af5d91e12eb7c11220b3434a7b7131a333e3af52ad5e0b80882}
 
   postgres-18:
-    image: ${WCP_POSTGRES_IMAGE:-postgres:18-alpine@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015}
+    image: ${WCP_POSTGRES_IMAGE:-postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff}
 
   meili-1:
     image: ${WCP_MEILISEARCH_IMAGE:-getmeili/meilisearch:v1.53.3@sha256:cf9bb47e8ecf080f0b3ca33f58a2f9d1e382d5479d360541df05e1c49841e4a9}

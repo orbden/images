@@ -224,7 +224,7 @@ services:
 
   # ── Database ──────────────────────────────────────────────────────────────
   mariadb-11:
-    image: ${WCP_MARIADB_IMAGE:-ghcr.io/orbden/mariadb:11.4@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620}
+    image: ${WCP_MARIADB_IMAGE:-ghcr.io/orbden/mariadb:11.4@sha256:5e73baf8179b29f115101bb102763a47a017361f3e9792daccba6646c3ab1532}
     restart: unless-stopped
     command: --innodb-buffer-pool-size=${MARIADB_INNODB_BUFFER_POOL_SIZE:-1024M}
     environment:
@@ -271,7 +271,7 @@ services:
   # demand (--profile db-13) or as the server's primary line when chosen at
   # install. It never shares or migrates the mariadb-11 volume.
   mariadb-13:
-    image: ${WCP_MARIADB_13_IMAGE:-ghcr.io/orbden/mariadb:13.0@sha256:f4054da26e3a9dd6c8b5cc97363e544408b15c0fb369d7359c25dc04826eb6e1}
+    image: ${WCP_MARIADB_13_IMAGE:-ghcr.io/orbden/mariadb:13.0@sha256:54f493ea0d60b621a5bff84e5b20100f8b86b6efa6b79158e04756c5194a5e4d}
     restart: unless-stopped
     profiles: ["db-13"]
     command: --innodb-buffer-pool-size=${MARIADB_INNODB_BUFFER_POOL_SIZE:-1024M}
@@ -317,7 +317,7 @@ services:
 
   # ── Object cache ──────────────────────────────────────────────────────────
   valkey-9:
-    image: ${WCP_VALKEY_IMAGE:-ghcr.io/orbden/valkey:9@sha256:bf09d58e96d6b4524a15396b65b242bbe18beebbcc15a04d8ee75ddac62fae0b}
+    image: ${WCP_VALKEY_IMAGE:-ghcr.io/orbden/valkey:9@sha256:c8e2d17498838af5d91e12eb7c11220b3434a7b7131a333e3af52ad5e0b80882}
     restart: unless-stopped
     # The start script writes the ACL file from VALKEY_ADMIN_PASSWORD, then
     # hands over to the image's entrypoint (which drops root).
@@ -357,7 +357,7 @@ services:
 
   # ── Relational DB (optional) ──────────────────────────────────────────────
   postgres-18:
-    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/orbden/postgres:18@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015}
+    image: ${WCP_POSTGRES_IMAGE:-ghcr.io/orbden/postgres:18@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff}
     restart: unless-stopped
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:

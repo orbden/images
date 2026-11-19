@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { appendOutputs, fetchOk, readJson, writeJson } from "./.github/scripts/lib.mjs";
+import { appendOutputs, fetchOk, pinnedReferences, readJson, writeJson } from "./.github/scripts/lib.mjs";
 
 function scratch() {
   return mkdtempSync(join(tmpdir(), "images-lib-"));
@@ -75,4 +75,19 @@ test("fetchOk returns 2xx answers and throws with the default or a custom messag
   } finally {
     server.close();
   }
+});
+
+test("pinnedReferences names the published and the upstream pin of an entry", () => {
+  const valkey = { image: "valkey/valkey", publishedImage: "ghcr.io/orbden/valkey", tagPattern: "{version}-alpine", version: "9", digest: "sha256:a" };
+  assert.deepEqual(pinnedReferences(valkey, valkey), [
+    "ghcr.io/orbden/valkey:9@sha256:a",
+    "valkey/valkey:9-alpine@sha256:a",
+  ]);
+  const mariadb = { image: "mariadb", publishedImage: "ghcr.io/orbden/mariadb", tagPattern: "{version}" };
+  assert.deepEqual(pinnedReferences(mariadb, { version: "11.4", digest: "sha256:b" }), [
+    "ghcr.io/orbden/mariadb:11.4@sha256:b",
+    "mariadb:11.4@sha256:b",
+  ]);
+  const bare = { image: "x/y", publishedImage: "ghcr.io/orbden/y" };
+  assert.deepEqual(pinnedReferences(bare, { version: "1", digest: "sha256:c" })[1], "x/y:1@sha256:c");
 });
