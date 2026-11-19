@@ -36,20 +36,12 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
 
-      - name: Show diff
-        if: steps.ranges.outputs.changed == 'true'
-        run: git diff -- frankenphp/caddy-global/trusted-proxies/cloudflare.caddyfile
-
-      - name: Create pull request
-        id: cpr
+      - name: Open or update the pull request
         if: steps.ranges.outputs.changed == 'true' && inputs.dry_run != 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: ./.github/actions/open-update-pr
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          diff-paths: frankenphp/caddy-global/trusted-proxies/cloudflare.caddyfile
           branch: chore/cloudflare-ranges
-          delete-branch: true
-          assignees: mrgkanev
-          reviewers: mrgkanev
           commit-message: "chore: update Cloudflare proxy ranges"
           title: "chore: update Cloudflare proxy ranges"
           body: |
@@ -63,33 +55,3 @@ jobs:
           labels: |
             dependencies
             security
-
-      - name: Close superseded Cloudflare range PRs
-        if: steps.ranges.outputs.changed == 'true' && inputs.dry_run != 'true'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const { data: pulls } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              per_page: 100,
-            });
-            const current = Number('${{ steps.cpr.outputs.pull-request-number }}');
-            const candidates = pulls.filter(
-              (pull) => pull.head.ref.startsWith('chore/cloudflare-ranges') && pull.number !== current,
-            );
-            for (const pull of candidates) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pull.number,
-                body: 'Superseded by a newer automated Cloudflare range update.',
-              });
-              await github.rest.pulls.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pull.number,
-                state: 'closed',
-              });
-            }

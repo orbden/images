@@ -1,0 +1,50 @@
+name: Open or update the automated PR
+description: Shows the working tree diff and opens (or refreshes) the single pull request that carries a scheduled update.
+# Runs inside the caller's job, which needs `contents: write` and
+# `pull-requests: write`. `branch` is fixed per update: per the
+# peter-evans/create-pull-request documentation the action then keeps one pull
+# request and updates it in place, so no older pull request can be left behind.
+
+inputs:
+  diff-paths:
+    description: Paths for `git diff` (space separated)
+    required: true
+  branch:
+    description: Fixed branch that carries the update
+    required: true
+  commit-message:
+    required: true
+  title:
+    required: true
+  body:
+    required: true
+  labels:
+    description: Newline separated labels
+    required: true
+
+outputs:
+  pull-request-number:
+    description: Number of the created or updated pull request
+    value: ${{ steps.cpr.outputs.pull-request-number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Show diff
+      shell: bash
+      env:
+        DIFF_PATHS: ${{ inputs.diff-paths }}
+      run: git diff -- $DIFF_PATHS
+
+    - id: cpr
+      uses: peter-evans/create-pull-request@v8
+      with:
+        token: ${{ github.token }}
+        branch: ${{ inputs.branch }}
+        delete-branch: true
+        assignees: mrgkanev
+        reviewers: mrgkanev
+        commit-message: ${{ inputs.commit-message }}
+        title: ${{ inputs.title }}
+        body: ${{ inputs.body }}
+        labels: ${{ inputs.labels }}

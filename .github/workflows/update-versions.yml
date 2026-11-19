@@ -38,20 +38,12 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
 
-      - name: Show diff
-        if: steps.versions.outputs.changed == 'true'
-        run: git diff versions.json
-
-      - name: Create Pull Request
-        id: cpr
+      - name: Open or update the pull request
         if: steps.versions.outputs.changed == 'true' && inputs.dry_run != 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: ./.github/actions/open-update-pr
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          diff-paths: versions.json
           branch: chore/docker-versions
-          delete-branch: true
-          assignees: mrgkanev
-          reviewers: mrgkanev
           commit-message: "chore: update Docker image versions (${{ steps.versions.outputs.date }})"
           title: "chore: Docker image version updates (${{ steps.versions.outputs.date }})"
           body: |
@@ -83,30 +75,3 @@ jobs:
           labels: |
             dependencies
             docker
-
-      - name: Close superseded Docker version PRs
-        if: steps.versions.outputs.changed == 'true' && inputs.dry_run != 'true'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const { data: pulls } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:chore/docker-versions`,
-            });
-            const current = Number('${{ steps.cpr.outputs.pull-request-number }}');
-            for (const pull of pulls.filter((pull) => pull.number !== current)) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pull.number,
-                body: 'Superseded by a newer automated Docker version update.',
-              });
-              await github.rest.pulls.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pull.number,
-                state: 'closed',
-              });
-            }
