@@ -57,7 +57,9 @@ const builds = [
   })),
   ...images.mariadb.runtimes.filter((runtime) => runtime.supportStatus === "supported").map((runtime) =>
     officialBuild("mariadb", images.mariadb, runtime.version, runtime.digest, `mariadb:${runtime.version}`)),
-  ...["valkey", "postgres", "meilisearch"].map((service) =>
+  ...images.postgres.runtimes.filter((runtime) => runtime.supportStatus === "supported").map((runtime) =>
+    officialBuild("postgres", images.postgres, runtime.version, runtime.digest, `postgres:${runtime.version}`)),
+  ...["valkey", "meilisearch"].map((service) =>
     officialBuild(service, images[service], images[service].version, images[service].digest)),
 ];
 const targets = args.filter((arg) => !arg.startsWith("--"));

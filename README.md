@@ -65,12 +65,15 @@ MariaDB ships as parallel lines, each with its own service and volume:
 other stays off until its profile is requested. Lines never share a data
 directory and nothing migrates data between them.
 
-## PostgreSQL 18
+## PostgreSQL
 
-PostgreSQL uses version 18, with the upstream multi-platform image
-pinned in `versions.json`. The stack service is `postgres-18`; both standalone
-and stack Compose use `postgres_18_data:/var/lib/postgresql` and
-`PGDATA=/var/lib/postgresql/18/docker`.
+PostgreSQL ships as parallel major lines, each with its own service and data
+volume, with the upstream multi-platform image pinned in `versions.json`:
+`postgres-18` (default, volume `postgres_18_data`) and `postgres-19`
+(`postgres_19_data`, profile `postgres-19`). Each line mounts its volume at
+`/var/lib/postgresql` and sets `PGDATA=/var/lib/postgresql/<major>/docker`.
+Lines never share a data directory and nothing migrates data between them. The
+standalone `postgres/docker-compose.yml` runs the default line (18).
 
 `node build.mjs postgres` pulls the exact official upstream image; it does not
 try to build a missing Dockerfile. The local stack overlay uses that same pin.
@@ -131,6 +134,8 @@ Images are automatically built and pushed to GitHub Container Registry on every 
 docker pull ghcr.io/orbden/frankenphp:1-php8.3
 docker pull ghcr.io/orbden/mariadb:11.4
 docker pull ghcr.io/orbden/mariadb:13.0
+docker pull ghcr.io/orbden/postgres:18
+docker pull ghcr.io/orbden/postgres:19
 docker pull ghcr.io/orbden/valkey:9
 docker pull ghcr.io/orbden/meilisearch:1.53.3
 ```

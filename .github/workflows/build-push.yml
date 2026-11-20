@@ -35,10 +35,10 @@ jobs:
       frankenphp_php_default: ${{ steps.v.outputs.frankenphp_php_default }}
       mariadb_runtimes: ${{ steps.v.outputs.mariadb_runtimes }}
       mariadb_default: ${{ steps.v.outputs.mariadb_default }}
+      postgres_runtimes: ${{ steps.v.outputs.postgres_runtimes }}
+      postgres_default: ${{ steps.v.outputs.postgres_default }}
       valkey: ${{ steps.v.outputs.valkey }}
       valkey_digest: ${{ steps.v.outputs.valkey_digest }}
-      postgres: ${{ steps.v.outputs.postgres }}
-      postgres_digest: ${{ steps.v.outputs.postgres_digest }}
       meilisearch: ${{ steps.v.outputs.meilisearch }}
       meilisearch_digest: ${{ steps.v.outputs.meilisearch_digest }}
       frankenphp_changed: ${{ steps.changes.outputs.frankenphp }}
@@ -79,8 +79,11 @@ jobs:
           echo "mariadb_default=$(jq -r '[.images.mariadb.runtimes[] | select(.supportStatus == "supported")] | .[0].id' versions.json)" >> $GITHUB_OUTPUT
           echo "valkey=$(jq -r '.images.valkey.version' versions.json)" >> $GITHUB_OUTPUT
           echo "valkey_digest=$(jq -r '.images.valkey.digest' versions.json)" >> $GITHUB_OUTPUT
-          echo "postgres=$(jq -r '.images.postgres.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "postgres_digest=$(jq -r '.images.postgres.digest' versions.json)" >> $GITHUB_OUTPUT
+          # postgres is `runtimes[]` like mariadb: coexisting major lines in
+          # their own compose services and volumes; the default line is the
+          # first "supported" entry (curated order).
+          echo "postgres_runtimes=$(jq -c '.images.postgres.runtimes' versions.json)" >> $GITHUB_OUTPUT
+          echo "postgres_default=$(jq -r '[.images.postgres.runtimes[] | select(.supportStatus == "supported")] | .[0].id' versions.json)" >> $GITHUB_OUTPUT
           echo "meilisearch=$(jq -r '.images.meilisearch.version' versions.json)" >> $GITHUB_OUTPUT
           echo "meilisearch_digest=$(jq -r '.images.meilisearch.digest' versions.json)" >> $GITHUB_OUTPUT
 
@@ -318,9 +321,15 @@ jobs:
           image-ref: ghcr.io/${{ github.repository_owner }}/valkey:${{ needs.versions.outputs.valkey }}
           name: valkey
 
+  # One job per coexisting PostgreSQL major line (images.postgres.runtimes),
+  # like mariadb above: each line keeps its own tag and digest.
   postgres:
     needs: versions
     if: github.event_name == 'workflow_dispatch' || needs.versions.outputs.postgres_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: ${{ fromJson(needs.versions.outputs.postgres_runtimes) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -329,14 +338,14 @@ jobs:
         with:
           image: postgres
           tags: |
-            type=raw,value=${{ needs.versions.outputs.postgres }}
-            type=raw,value=latest
-          source: postgres:${{ needs.versions.outputs.postgres }}-alpine@${{ needs.versions.outputs.postgres_digest }}
+            type=raw,value=${{ matrix.runtime.version }}
+            type=raw,value=latest,enable=${{ matrix.runtime.id == needs.versions.outputs.postgres_default }}
+          source: postgres:${{ matrix.runtime.version }}-alpine@${{ matrix.runtime.digest }}
 
       - uses: ./.github/actions/scan-image
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/postgres:${{ needs.versions.outputs.postgres }}
-          name: postgres
+          image-ref: ghcr.io/${{ github.repository_owner }}/postgres:${{ matrix.runtime.version }}
+          name: postgres-${{ matrix.runtime.id }}
 
   meilisearch:
     needs: versions

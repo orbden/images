@@ -194,7 +194,7 @@ console.log("Checking Docker Hub for latest versions…\n");
  * a new runtime entry here - that also needs a compose service block and
  * Rust catalog wiring, so it stays a reported candidate for a human to add.
  */
-const RUNTIME_ARRAY_SERVICES = new Set(["mariadb"]);
+const RUNTIME_ARRAY_SERVICES = new Set(["mariadb", "postgres"]);
 
 async function checkRuntimeArrayService(key, cfg) {
   let changed = false;

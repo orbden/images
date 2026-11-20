@@ -75,5 +75,8 @@ services:
   postgres-18:
     image: ${WCP_POSTGRES_IMAGE:-postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff}
 
+  postgres-19:
+    image: ${WCP_POSTGRES_19_IMAGE:-postgres:19-alpine@sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188}
+
   meili-1:
     image: ${WCP_MEILISEARCH_IMAGE:-getmeili/meilisearch:v1.53.3@sha256:cf9bb47e8ecf080f0b3ca33f58a2f9d1e382d5479d360541df05e1c49841e4a9}
