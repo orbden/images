@@ -5,7 +5,7 @@ PostgreSQL and Meilisearch, and Valkey. A CMS is an application deployed into a
 site runtime, not another copy of the whole stack. OrbDen currently
 automates WordPress installation; its Drupal support is read-only diagnostics,
 and Joomla detection is read-only. See the
-[OrbDen application driver plan](https://github.com/orbden/website-control-panel/blob/master/documentation/website-control-panel/devdocs/application-drivers.md)
+[OrbDen application driver plan](https://github.com/orbden/website-control-panel/blob/master/docs/website-control-panel/devdocs/application-drivers.md)
 before adding CMS-specific provisioning here.
 
 ## Before enabling a CMS site
