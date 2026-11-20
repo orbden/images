@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "_comment": "Single source of truth for Docker image versions. Updated automatically by .github/workflows/update-docker-versions.yml",
-  "_updated": "2026-11-19",
+  "_updated": "2026-11-20",
   "platforms": [
     "linux/amd64",
     "linux/arm64"
@@ -116,20 +116,39 @@
     "postgres": {
       "image": "postgres",
       "publishedImage": "ghcr.io/orbden/postgres",
-      "version": "18",
-      "digest": "sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff",
-      "platformDigests": {
-        "linux/amd64": "sha256:68e33adb18d9962952f00d5e3b8644305e10e375f98dd652bf6ee6a1836314ba",
-        "linux/arm64": "sha256:c69207a837b37339d626d730b7fe0cdd5445733fa1a9f61a65c0297a525e761f"
-      },
       "tagPattern": "{version}-alpine",
+      "runtimes": [
+        {
+          "id": "postgres-18",
+          "majorLine": "18",
+          "version": "18",
+          "digest": "sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff",
+          "platformDigests": {
+            "linux/amd64": "sha256:68e33adb18d9962952f00d5e3b8644305e10e375f98dd652bf6ee6a1836314ba",
+            "linux/arm64": "sha256:c69207a837b37339d626d730b7fe0cdd5445733fa1a9f61a65c0297a525e761f"
+          },
+          "supportStatus": "supported",
+          "resolvedVersion": "18.7"
+        },
+        {
+          "id": "postgres-19",
+          "majorLine": "19",
+          "version": "19",
+          "digest": "sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188",
+          "platformDigests": {
+            "linux/amd64": "sha256:8e81a484097154610d0b72f2fd1b70e1f8c31fd6b743b6d0da8b2a8c1ab2ea1d",
+            "linux/arm64": "sha256:8de50f3aa8f3da32960999886322bb746614951eed44304ea838b63430bb808a"
+          },
+          "supportStatus": "supported",
+          "resolvedVersion": "19.0"
+        }
+      ],
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
       "registryUrl": "https://hub.docker.com/v2/repositories/library/postgres/tags",
-      "notes": "Re-tagged upstream PostgreSQL 18 Alpine image; postgresql.conf tuning is bind-mounted. PGDATA is /var/lib/postgresql/18/docker, with a dedicated postgres_18_data volume mounted at /var/lib/postgresql. Supports amd64 and arm64.",
-      "resolvedVersion": "18.7"
+      "notes": "Re-tagged upstream PostgreSQL Alpine images, one entry per coexisting major line (each its own compose service and data volume; a new major is added as another entry in `runtimes` rather than replacing one); postgresql.conf tuning is bind-mounted. PGDATA is /var/lib/postgresql/<major>/docker with a dedicated postgres_<major>_data volume mounted at /var/lib/postgresql. Supports amd64 and arm64."
     },
     "valkey": {
       "image": "valkey/valkey",

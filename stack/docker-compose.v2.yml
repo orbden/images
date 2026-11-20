@@ -398,6 +398,53 @@ services:
       retries: 5
       start_period: 20s
 
+  # Parallel PostgreSQL 19 line: its own service and data volume, started on
+  # demand (--profile postgres-19). It never shares or migrates the postgres-18
+  # volume (PGDATA is per major).
+  postgres-19:
+    image: ${WCP_POSTGRES_19_IMAGE:-ghcr.io/orbden/postgres:19@sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188}
+    restart: unless-stopped
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      PGDATA: /var/lib/postgresql/19/docker
+    volumes:
+      - postgres_19_data:/var/lib/postgresql
+      - ../postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    networks:
+      backend:
+        aliases:
+          - ${WCP_POSTGRES_19_ALIAS:-postgres-19}
+    profiles:
+      - postgres-19
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   # ── Full-text search (optional) ───────────────────────────────────────────
   # Snapshot restore is a startup-only operation. Export the snapshot outside
   # meilisearch_data before clearing that volume: even its snapshots/ directory
@@ -451,6 +498,7 @@ volumes:
   valkey_data:
   valkey_socket:
   postgres_18_data:
+  postgres_19_data:
   meilisearch_data:
     # Blue/green Meilisearch upgrades import into a new volume and atomically
     # switch this pointer together with WCP_MEILISEARCH_IMAGE. The default
