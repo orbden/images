@@ -11,6 +11,7 @@ Custom Docker images for the OrbDen hosting stack — each one is a thin wrapper
 | `valkey`      | `valkey/valkey`        | Redis-compatible object cache                                   |
 | `postgres`    | `postgres`             | PostgreSQL (official image, no custom build)                    |
 | `meilisearch` | `getmeili/meilisearch` | Lightweight full-text search engine (Elasticsearch alternative) |
+| `node`        | `node`                 | Node.js LTS (Debian bookworm), for temporary npm builds and per-application Node servers |
 
 All images are built for `linux/amd64` and `linux/arm64` (Apple Silicon, AWS Graviton, Raspberry Pi).
 
@@ -138,6 +139,7 @@ docker pull ghcr.io/orbden/postgres:18
 docker pull ghcr.io/orbden/postgres:19
 docker pull ghcr.io/orbden/valkey:9
 docker pull ghcr.io/orbden/meilisearch:1.53.3
+docker pull ghcr.io/orbden/node:24
 ```
 
 ## Version management
