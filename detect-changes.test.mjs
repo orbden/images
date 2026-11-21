@@ -62,7 +62,7 @@ function changedAfter(change) {
     rmSync(repo, { recursive: true, force: true });
   }
 }
-const none = { frankenphp: "false", mariadb: "false", valkey: "false", postgres: "false", meilisearch: "false" };
+const none = { frankenphp: "false", mariadb: "false", valkey: "false", postgres: "false", meilisearch: "false", node: "false" };
 
 test("a compose or documentation change in frankenphp rebuilds nothing", () => {
   assert.deepEqual(changedAfter((repo) => appendFileSync(join(repo, "frankenphp/docker-compose.yml"), "# note\n")), none);
