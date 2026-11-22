@@ -185,6 +185,24 @@
       "registryUrl": "https://hub.docker.com/v2/repositories/getmeili/meilisearch/tags",
       "notes": "Lightweight full-text search engine. Alternative to Elasticsearch. Rust-based, ~50MB RAM idle.",
       "resolvedVersion": "1.53.3"
+    },
+    "node": {
+      "image": "node",
+      "publishedImage": "ghcr.io/orbden/node",
+      "version": "24",
+      "digest": "sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54",
+      "platformDigests": {
+        "linux/amd64": "sha256:0e2646ab57e77b7a384a0cb59b6815b182c77e1f9c3ba36bd8435bd9c4e6680e",
+        "linux/arm64": "sha256:5f8fabfed57b75127de2f584593d67a9e8c90e6b0f65652871f9ef0f759c0299"
+      },
+      "tagPattern": "{version}-bookworm-slim",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryUrl": "https://hub.docker.com/v2/repositories/library/node/tags",
+      "notes": "Node.js LTS on Debian bookworm (glibc, so native npm modules install without a compiler for the common prebuilt targets). Re-tagged upstream image used for temporary npm builds and, per application, for hosted Node servers; no files are baked in. Supports amd64 and arm64.",
+      "resolvedVersion": "24"
     }
   }
 }

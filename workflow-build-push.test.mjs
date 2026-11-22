@@ -26,7 +26,7 @@ test("tag lists come from docker/metadata-action without implicit latest tags", 
 test("the re-tag jobs keep their tags, sources and scan names", () => {
   const text = workflows.find((w) => w.name === "build-push.yml").text;
   const job = (name) => text.split(new RegExp(`^  ${name}:\\n`, "m"))[1].split(/^  (?=[\w-]+:\n)/m)[0];
-  for (const image of ["valkey", "meilisearch"]) {
+  for (const image of ["valkey", "meilisearch", "node"]) {
     const body = job(image);
     assert.match(body, new RegExp(`image: ${image}\\n`));
     assert.match(body, /type=raw,value=\$\{\{ needs\.versions\.outputs\.\w+ \}\}\n\s+type=raw,value=latest\n/);
@@ -39,6 +39,7 @@ test("the re-tag jobs keep their tags, sources and scan names", () => {
   assert.match(job("postgres"), /source: postgres:\$\{\{ matrix\.runtime\.version \}\}-alpine@\$\{\{ matrix\.runtime\.digest \}\}/);
   assert.match(job("valkey"), /source: valkey\/valkey:\$\{\{ needs\.versions\.outputs\.valkey \}\}-alpine@/);
   assert.match(job("meilisearch"), /source: getmeili\/meilisearch:v\$\{\{/);
+  assert.match(job("node"), /source: node:\$\{\{ needs\.versions\.outputs\.node \}\}-bookworm-slim@\$\{\{ needs\.versions\.outputs\.node_digest \}\}/);
   assert.match(job("frankenphp-merge"), /name: frankenphp-php\$\{\{ matrix\.php \}\}/);
 });
 
