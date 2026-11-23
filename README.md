@@ -180,6 +180,10 @@ when their requirements are unavailable. Run the suite on Linux with those
 prerequisites to exercise them. The Compose configuration test additionally
 requires the Docker Compose CLI. These checks do not build or start containers.
 
+For an opt-in integration check, run `RUN_CONTAINER_TESTS=1 node --test tests/container-integration.test.mjs` (PowerShell: `$env:RUN_CONTAINER_TESTS="1"; node --test tests/container-integration.test.mjs`). It builds each supported FrankenPHP runtime and validates its Caddy configuration, PHP extensions, and WP-CLI wrapper inside temporary containers. Docker and network access for the build are required; this can take considerable time. Temporary test image tags are removed afterwards. The broader existing `frankenphp/structure-test.yaml` can also be run with container-structure-test.
+
+To test the real stack services, run `RUN_SERVICE_TESTS=1 node --test tests/services-integration.test.mjs` (PowerShell: `$env:RUN_SERVICE_TESTS="1"; node --test tests/services-integration.test.mjs`). It starts MariaDB, PostgreSQL and Valkey in an isolated Compose project, waits for their configured healthchecks, checks Valkey authentication, and connects to all three from the pinned FrankenPHP image. Docker and access to the image registries are required. The test removes its own containers, network and temporary volumes afterwards; no host ports are published.
+
 ### How to open a PR
 
 1. Fork the repo and create a branch from `main`

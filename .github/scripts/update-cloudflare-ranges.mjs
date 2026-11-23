@@ -23,7 +23,7 @@ const dryRun = process.env.DRY_RUN === "true";
 
 function isValidCidr(value, version) {
   const [address, prefix, ...extra] = value.split("/");
-  if (extra.length > 0 || !address || prefix === undefined || isIP(address) !== version) return false;
+  if (extra.length > 0 || !address || !/^\d+$/.test(prefix ?? "") || isIP(address) !== version) return false;
 
   const prefixNumber = Number(prefix);
   return Number.isInteger(prefixNumber) && prefixNumber >= 0 && prefixNumber <= (version === 4 ? 32 : 128);
