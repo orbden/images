@@ -3,17 +3,17 @@
  * Prepare catalog images for the current platform. FrankenPHP is built locally;
  * data services use the exact official images mirrored by the publishing job.
  *
- * node images/build.mjs                         # all supported runtimes/services
- * node images/build.mjs frankenphp:8.3 mariadb  # selected PHP/service
- * node images/build.mjs --list --json           # inspect without Docker
- * node images/build.mjs --check                 # check upstream versions
+ * node images/scripts/build.mjs                         # all supported runtimes/services
+ * node images/scripts/build.mjs frankenphp:8.3 mariadb  # selected PHP/service
+ * node images/scripts/build.mjs --list --json           # inspect without Docker
+ * node images/scripts/build.mjs --check                 # check upstream versions
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const directory = dirname(fileURLToPath(import.meta.url));
+const directory = dirname(dirname(fileURLToPath(import.meta.url)));
 const manifestPath = join(directory, "built-images.json");
 const { images } = JSON.parse(readFileSync(join(directory, "versions.json"), "utf8"));
 const platform = `linux/${process.arch === "arm64" ? "arm64" : "amd64"}`;

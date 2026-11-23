@@ -6,10 +6,10 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const directory = dirname(fileURLToPath(import.meta.url));
+const directory = dirname(dirname(fileURLToPath(import.meta.url)));
 const workflowsDir = join(directory, ".github/workflows");
 const actionsDir = join(directory, ".github/actions");
-const read = (path) => readFileSync(path, "utf8");
+const read = (path) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 const workflows = readdirSync(workflowsDir)
   .filter((name) => name.endsWith(".yml"))
   .map((name) => ({ name, text: read(join(workflowsDir, name)) }));

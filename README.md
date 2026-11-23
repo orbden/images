@@ -21,10 +21,10 @@ All images are built for `linux/amd64` and `linux/arm64` (Apple Silicon, AWS Gra
 cp .env.example .env
 # Edit .env — set passwords; stack image versions come from versions.json
 
-node build.mjs                   # all supported PHP runtimes + data services
-node build.mjs frankenphp:8.3     # build one PHP runtime
-node build.mjs mariadb valkey     # pull pinned official data-service images
-node build.mjs --list             # inspect without building
+node scripts/build.mjs                   # all supported PHP runtimes + data services
+node scripts/build.mjs frankenphp:8.3     # build one PHP runtime
+node scripts/build.mjs mariadb valkey     # pull pinned official data-service images
+node scripts/build.mjs --list             # inspect without building
 ```
 
 ## Running services
@@ -76,7 +76,7 @@ volume, with the upstream multi-platform image pinned in `versions.json`:
 Lines never share a data directory and nothing migrates data between them. The
 standalone `postgres/docker-compose.yml` runs the default line (18).
 
-`node build.mjs postgres` pulls the exact official upstream image; it does not
+`node scripts/build.mjs postgres` pulls the exact official upstream image; it does not
 try to build a missing Dockerfile. The local stack overlay uses that same pin.
 Production Compose uses its GHCR mirror, which the image workflow publishes
 from the catalog digest rather than from a mutable upstream tag.
@@ -110,7 +110,7 @@ Compose file uses that network connection; its socket is not shared with
 separately started application containers.
 
 Local mode uses locally built FrankenPHP and pinned official data-service
-images; prepare them with `node build.mjs`. Each supported PHP runtime is built
+images; prepare them with `node scripts/build.mjs`. Each supported PHP runtime is built
 with its own catalog tag. Ingress keeps the PHP 8.3 carrier image; its PHP
 version does not select a site runtime. Existing images are reused on the same
 platform; `--force` rebuilds them. No additional global builder is created.
@@ -171,11 +171,20 @@ We welcome pull requests. Before opening one, please read the guidelines below �
 - Restructuring the repo layout or renaming files — this repo is a submodule and path changes break upstream consumers
 - Experimental or "nice to have" features without a clear production use case
 
+### Tests
+
+Run `node --test` from the repository root. The suite discovers tests in `tests/`.
+The workflow change-detection tests require a POSIX environment with Bash, Git,
+and jq; the Docker command mock also requires POSIX. These tests are skipped
+when their requirements are unavailable. Run the suite on Linux with those
+prerequisites to exercise them. The Compose configuration test additionally
+requires the Docker Compose CLI. These checks do not build or start containers.
+
 ### How to open a PR
 
 1. Fork the repo and create a branch from `main`
 2. Make the smallest change that solves the problem — one concern per PR
-3. Test locally with `node build.mjs` before pushing
+3. Run `node --test` and test image changes locally with `node scripts/build.mjs` before pushing
 4. Describe in the PR body: what the problem is, what you changed, and how you tested it
 
 PRs that touch production-critical configs (Caddyfile, php.ini, MariaDB tuning) will be reviewed carefully and may take longer. We may ask for evidence (benchmarks, logs) before merging.

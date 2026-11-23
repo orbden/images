@@ -5,9 +5,9 @@ import { readFileSync, mkdtempSync, copyFileSync, writeFileSync, mkdirSync, rmSy
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-const directory = dirname(fileURLToPath(import.meta.url));
+const directory = dirname(dirname(fileURLToPath(import.meta.url)));
 const { images } = JSON.parse(readFileSync(join(directory, "versions.json"), "utf8"));
-const list = (...args) => spawnSync(process.execPath, [join(directory, "build.mjs"), "--list", "--json", ...args], { encoding: "utf8" });
+const list = (...args) => spawnSync(process.execPath, [join(directory, "scripts/build.mjs"), "--list", "--json", ...args], { encoding: "utf8" });
 
 test("all supported PHP runtimes and exact official service pins are prepared", () => {
   const result = list();
@@ -33,22 +33,24 @@ test("an explicit PHP target builds only that runtime and typos fail", () => {
   assert.notEqual(list("--froce").status, 0);
 });
 
-test("official images are pulled without creating a builder; repeat run reuses them", () => {
+test("official images are pulled without creating a builder; repeat run reuses them", { skip: process.platform === "win32" ? "Docker executable mock requires POSIX" : false }, () => {
   const temp = mkdtempSync(join(tmpdir(), "wcp-image-test-"));
   try {
-    for (const name of ["build.mjs", "versions.json"]) copyFileSync(join(directory, name), join(temp, name));
+    mkdirSync(join(temp, "scripts"));
+    copyFileSync(join(directory, "scripts/build.mjs"), join(temp, "scripts/build.mjs"));
+    copyFileSync(join(directory, "versions.json"), join(temp, "versions.json"));
     mkdirSync(join(temp, "bin"));
     const log = join(temp, "commands.jsonl");
     const docker = join(temp, "bin/docker");
     writeFileSync(docker, `#!${process.execPath}\nimport('node:fs').then(fs => {fs.appendFileSync(process.env.COMMAND_LOG, JSON.stringify(process.argv.slice(2))+'\\n'); if(process.argv[2]==='image' && process.env.IMAGE_PRESENT==='1') console.log('linux/'+(process.arch==='arm64'?'arm64':'amd64')); process.exit(process.argv[2]==='image' && process.env.IMAGE_PRESENT!=='1' ? 1 : 0);});\n`, { mode: 0o755 });
     const env = { ...process.env, PATH: `${join(temp, "bin")}:${process.env.PATH}`, COMMAND_LOG: log };
-    let result = spawnSync(process.execPath, [join(temp, "build.mjs"), "mariadb", "valkey", "meilisearch"], { encoding: "utf8", env });
+    let result = spawnSync(process.execPath, [join(temp, "scripts/build.mjs"), "mariadb", "valkey", "meilisearch"], { encoding: "utf8", env });
     assert.equal(result.status, 0, result.stderr);
     let commands = readFileSync(log, "utf8").trim().split("\n").map(JSON.parse);
     assert.equal(commands.filter((args) => args[0] === "pull").length, images.mariadb.runtimes.filter((runtime) => runtime.supportStatus === "supported").length + 2);
     assert.ok(commands.every((args) => args[0] !== "buildx"));
     writeFileSync(log, "");
-    result = spawnSync(process.execPath, [join(temp, "build.mjs"), "valkey"], { encoding: "utf8", env: { ...env, IMAGE_PRESENT: "1" } });
+    result = spawnSync(process.execPath, [join(temp, "scripts/build.mjs"), "valkey"], { encoding: "utf8", env: { ...env, IMAGE_PRESENT: "1" } });
     assert.equal(result.status, 0, result.stderr);
     commands = readFileSync(log, "utf8").trim().split("\n").map(JSON.parse);
     assert.ok(commands.every((args) => args[0] === "image"));
@@ -85,9 +87,34 @@ test("local Compose consumes exactly the images prepared for every runtime", (t)
 });
 
 test("example settings have unique keys and the current Valkey ACL model", () => {
-  const example = readFileSync(join(directory, ".env.example"), "utf8");
+  const example = readFileSync(join(directory, ".env.example"), "utf8").replace(/\r\n/g, "\n");
   const keys = example.split("\n").filter((line) => /^[A-Z_]+=/.test(line)).map((line) => line.split("=")[0]);
   assert.equal(new Set(keys).size, keys.length, "duplicate environment settings");
   assert.ok(example.includes(`VALKEY_VERSION=${images.valkey.version}\n`));
   assert.ok(!example.includes("VALKEY_PASSWORD="));
+});
+
+
+test("build script resolves the repository from an unrelated working directory", () => {
+  const result = spawnSync(process.execPath, [join(directory, "scripts/build.mjs"), "--list", "--json", "frankenphp"], { cwd: tmpdir(), encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  const { builds } = JSON.parse(result.stdout);
+  assert.ok(builds.length > 0);
+  assert.ok(builds.every((build) => build.context === join(directory, "frankenphp")));
+});
+
+test("--check resolves the version checker from the repository and uses dry-run", () => {
+  const temp = mkdtempSync(join(tmpdir(), "wcp-check-test-"));
+  try {
+    mkdirSync(join(temp, "scripts"));
+    mkdirSync(join(temp, ".github/scripts"), { recursive: true });
+    copyFileSync(join(directory, "scripts/build.mjs"), join(temp, "scripts/build.mjs"));
+    copyFileSync(join(directory, "versions.json"), join(temp, "versions.json"));
+    writeFileSync(join(temp, ".github/scripts/check-docker-versions.mjs"), 'console.log("dry-run=" + process.env.DRY_RUN);');
+    const result = spawnSync(process.execPath, [join(temp, "scripts/build.mjs"), "--check"], { cwd: tmpdir(), encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /dry-run=true/);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
 });

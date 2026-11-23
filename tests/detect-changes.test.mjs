@@ -5,12 +5,15 @@ import { readFileSync, mkdtempSync, writeFileSync, appendFileSync, cpSync, rmSyn
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-const directory = dirname(fileURLToPath(import.meta.url));
+const directory = dirname(dirname(fileURLToPath(import.meta.url)));
+// The workflow is a Bash script using jq and runs on Linux in GitHub Actions.
+const dependenciesAvailable = process.platform !== "win32" && ["bash", "jq", "git"].every((command) => spawnSync(command, ["--version"], { stdio: "ignore" }).status === 0);
+const workflowTest = (name, fn) => test(name, { skip: dependenciesAvailable ? false : "requires POSIX, bash, jq and git" }, fn);
 
 // The "Detect changed images" step of build-push.yml, taken from the workflow
 // text so the test runs the exact script CI runs.
 function detectScript() {
-  const lines = readFileSync(join(directory, ".github/workflows/build-push.yml"), "utf8").split("\n");
+  const lines = readFileSync(join(directory, ".github/workflows/build-push.yml"), "utf8").replace(/\r\n/g, "\n").split("\n");
   const id = lines.findIndex((line) => /^\s+id: changes\s*$/.test(line));
   const run = lines.findIndex((line, index) => index > id && /^\s+run: \|\s*$/.test(line));
   assert.ok(id > 0 && run > id, "Detect changed images step not found");
@@ -64,26 +67,26 @@ function changedAfter(change) {
 }
 const none = { frankenphp: "false", mariadb: "false", valkey: "false", postgres: "false", meilisearch: "false", node: "false" };
 
-test("a compose or documentation change in frankenphp rebuilds nothing", () => {
+workflowTest("a compose or documentation change in frankenphp rebuilds nothing", () => {
   assert.deepEqual(changedAfter((repo) => appendFileSync(join(repo, "frankenphp/docker-compose.yml"), "# note\n")), none);
   assert.deepEqual(changedAfter((repo) => writeFileSync(join(repo, "frankenphp/README.md"), "notes\n")), none);
 });
 
-test("a file that goes into the frankenphp image rebuilds frankenphp only", () => {
+workflowTest("a file that goes into the frankenphp image rebuilds frankenphp only", () => {
   assert.deepEqual(changedAfter((repo) => appendFileSync(join(repo, "frankenphp/Dockerfile"), "# note\n")), { ...none, frankenphp: "true" });
 });
 
-test("recorded digests are build outputs: a digest-only change rebuilds nothing", () => {
+workflowTest("recorded digests are build outputs: a digest-only change rebuilds nothing", () => {
   assert.deepEqual(changedAfter((repo) => editVersions(repo, (images) => {
     images.frankenphp.runtimes[0].digest = "sha256:" + "0".repeat(64);
     images.frankenphp.runtimes[0].platformDigests = {};
   })), none);
 });
 
-test("a changed frankenphp version or runtime rebuilds frankenphp", () => {
+workflowTest("a changed frankenphp version or runtime rebuilds frankenphp", () => {
   assert.deepEqual(changedAfter((repo) => editVersions(repo, (images) => { images.frankenphp.baseVersion = "9.9.9"; })), { ...none, frankenphp: "true" });
 });
 
-test("a changed pin of a re-tagged service re-tags that service only", () => {
+workflowTest("a changed pin of a re-tagged service re-tags that service only", () => {
   assert.deepEqual(changedAfter((repo) => editVersions(repo, (images) => { images.meilisearch.version = "9.9.9"; })), { ...none, meilisearch: "true" });
 });

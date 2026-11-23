@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { appendOutputs, fetchOk, pinnedReferences, readJson, writeJson } from "./.github/scripts/lib.mjs";
+import { appendOutputs, fetchOk, pinnedReferences, readJson, writeJson } from "../.github/scripts/lib.mjs";
 
 function scratch() {
   return mkdtempSync(join(tmpdir(), "images-lib-"));
