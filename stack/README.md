@@ -8,6 +8,9 @@ and Joomla detection is read-only. See the
 [OrbDen application driver plan](https://github.com/orbden/website-control-panel/blob/master/docs/website-control-panel/devdocs/application-drivers.md)
 before adding CMS-specific provisioning here.
 
+For an operator checklist covering isolated site restore, verification and
+cutover, see [the recovery runbook](RECOVERY.md).
+
 ## Before enabling a CMS site
 
 1. Select a PHP runtime version supported by that CMS release and check its
