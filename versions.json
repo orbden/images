@@ -204,5 +204,13 @@
       "notes": "Node.js LTS on Debian bookworm (glibc, so native npm modules install without a compiler for the common prebuilt targets). Re-tagged upstream image used for temporary npm builds and, per application, for hosted Node servers; no files are baked in. Supports amd64 and arm64.",
       "resolvedVersion": "24"
     }
+  },
+  "downloads": {
+    "joomla": {
+      "version": "6.2.1",
+      "url": "https://update.joomla.org/releases/6.2.1/Joomla_6.2.1-Stable-Full_Package.tar.gz",
+      "sha256": "b8f0c920cfe5013a46f8b386720301290eb36f531d462d75bac99d75e4948d07",
+      "notes": "Full package from the project's own release server. The panel installs only this file and the engine checks this SHA-256 before unpacking; it equals the digest Joomla publishes with the GitHub release. Not an image: the build workflow reads only images.*."
+    }
   }
 }
