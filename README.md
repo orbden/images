@@ -146,6 +146,8 @@ docker pull ghcr.io/orbden/node:24
 
 All image versions live in `versions.json`. A GitHub Actions workflow runs every Monday, checks Docker Hub for new releases, and opens a PR automatically when updates are found.
 
+`downloads` in the same file pins application archives the panel installs (for example Joomla's full package): an HTTPS URL on the project's own release server and the file's SHA-256, which the engine checks before unpacking. It is outside `images`, so changing it rebuilds no image; it is updated by hand.
+
 To check manually:
 
 ```bash
