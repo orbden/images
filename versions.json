@@ -211,6 +211,12 @@
       "url": "https://update.joomla.org/releases/6.2.1/Joomla_6.2.1-Stable-Full_Package.tar.gz",
       "sha256": "b8f0c920cfe5013a46f8b386720301290eb36f531d462d75bac99d75e4948d07",
       "notes": "Full package from the project's own release server. The panel installs only this file and the engine checks this SHA-256 before unpacking; it equals the digest Joomla publishes with the GitHub release. Not an image: the build workflow reads only images.*."
+    },
+    "nextcloud": {
+      "version": "35.0.3",
+      "url": "https://download.nextcloud.com/server/releases/nextcloud-35.0.3.tar.bz2",
+      "sha256": "58401440ce81b7f8d445a8c2a8027572b616ef83592f96b121fd15ec8a1aed35",
+      "notes": "Server archive from the project's own download server. The panel installs only this file and the engine checks this SHA-256 before unpacking; it equals the published nextcloud-35.0.3.tar.bz2.sha256. Not an image: the build workflow reads only images.*."
     }
   }
 }
